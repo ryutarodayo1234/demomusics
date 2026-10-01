@@ -1,379 +1,349 @@
+/* style.css - ボツ音源プレイヤー */
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --bg: #f1f5f9;
+  --card-bg: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --player-bg: rgba(255, 255, 255, 0.95);
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
-  max-width: 430px;
+  max-width: 480px;
   margin: 0 auto;
-  font-family: "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", "メイリオ", "Meiryo", sans-serif;
-  display: flex;
-  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
   min-height: 100vh;
-  background-color: #E8EAF6;
-}
-
-.track-information{
-  width: 100%;
-  height: 100vh;
-  position: absolute;
-  z-index: 999;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-/* track-information セクションのスタイル */
-.track-information {
-  display: none; /* 初期状態で非表示 */
-  padding: 1rem;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin-top: 1rem;
+  padding: 16px 16px 260px 16px;
+  /* プレイヤーに隠れない余白 */
   position: relative;
 }
 
-/* バツボタンのスタイル */
-.info-close-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  font-size: 18px;
-  cursor: pointer;
-  color: #333;
-}
-
-.info-close-btn:hover {
-  color: #ff0000;
-}
-
-.track-info-list {
-  list-style: none;
-  padding: 0;
-  margin-top: 1rem;
-}
-
-.info-item {
-  margin-bottom: 10px;
-}
-
-.job-title {
-  font-weight: bold;
-}
-
-.name {
-  font-weight: normal;
-}
-
-.info-toggle-btn {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.info-toggle-btn:hover {
-  background-color: #0056b3;
-}
-
-.player {
-  position: fixed;
-  bottom: 0;
-  z-index: 1;
-  max-width: 400px;
-  width: 100%;
-  background-color: #f5f5f5;
-  border-radius: 20px 20px 0 0;
-  padding: 20px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+/* ヘッダー */
+.page-header {
   text-align: center;
+  padding: 16px 0 20px 0;
 }
 
-#compress-bar {
-  display: inline-block;
-  width: 40%;                /* 40%の幅 */
-  height: 6px;              /* 高さを40pxに変更 */
-  background-color: #aaaaaa; /* ボタンの色 */
-  color: white;              /* テキストの色 */
-  text-align: center;        /* テキストの中央揃え */
-  border: none;              /* ボーダーなし */
-  border-radius: 3px;       /* 角丸 */
-  cursor: pointer;           /* カーソルをポインタに */
-  transition: background-color 0.3s; /* ホバー時の効果 */
-}
-
-#compress-bar:hover {
-  background-color: #333333; /* ホバー時の色 */
-}
-
-.album-art img {
-  width: 100%;
-  border-radius: 10px;
-}
-
-/* スクロール効果 */
-.track-info {
-  max-width: 80%;
-  margin: 10px auto 0 auto;
-  overflow: hidden;
-  white-space: nowrap;
-  position: relative;
-}
-
-.track-title {
-  font-weight: bold;
-  font-size: 1.1rem;
-  white-space: nowrap;
-  overflow: hidden;
-  display: inline-block;
-  padding-right: 1em;
-}
-
-.scroll-animation {
-  animation: scroll 20s linear infinite;
-}
-
-@keyframes scroll {
-  0%, 10% {
-    transform: translateX(0%);
-  }
-  90%, 100% {
-    transform: translateX(-70%);
-  }
-}
-
-.artist-name, .track-date {
-  color: #757575;
-  font-size: 0.9rem;
-  margin: 5px 0 0 0;
-}
-
-.progress-container {
-  display: flex;
-  align-items: center;
-  font-size: 0.8rem;
-  color: #757575;
-  margin-top: 15px;
-}
-
-.current-time, .duration {
-  width: 35px;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 6px;
-  background: #e0e0e0;
-  border-radius: 3px;
-  overflow: hidden;
-  margin: 0 10px;
-}
-
-.controls {
-  display: flex;
-  justify-content: space-around;
-  margin: 15px 0;
-}
-
-.controls button {
+.page-header h1 {
   font-size: 1.5rem;
-  background: none;
-  border: none;
-  color: #757575;
-  cursor: pointer;
-  transition: color 0.3s;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
-.controls button:hover {
-  color: #3F51B5;
+.page-header .stats {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 4px;
 }
 
-.volume-container {
-  display: flex;
-  align-items: center;
-  margin: 15px auto 0 auto;
-  width: 80%;
-}
-
-.volume-icon {
-  font-size: 1rem;
-  color: #757575;
-  margin: 0 5px;
-}
-
-.volume-bar {
-  flex: 1;
-  height: 6px;
-  background: #e0e0e0;
-  border-radius: 3px;
-  overflow: hidden;
-  margin: 0 10px;
-}
-
-.volume-bar::-webkit-slider-thumb {
-  appearance: none;
-  width: 12px;
-  height: 12px;
-  background: #3F51B5;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.volume-bar::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
-  background: #3F51B5;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.information-container {
-  display: flex;
-  justify-content: space-around;
-  margin: 15px 0 0 0;
-}
-
-.download-btn, .credit-btn {
-  background-color: #333333; /* ボタンの背景色 */
-  color: white; /* テキストの色 */
-  border: none; /* ボーダーなし */
-  border-radius: 5px; /* 角を丸く */
-  font-size: 0.9rem; /* フォントサイズ */
-  cursor: pointer; /* カーソルをポインタに */
-  transition: background-color 0.3s; /* ホバー時の背景色の変更にアニメーションを追加 */
-}
-
-.download-btn:hover, .credit-btn:hover {
-  background-color: #303f9f; /* ホバー時の背景色 */
-}
-
-.repeat-btn {
-  background-color: #333333; /* ボタンの背景色 */
-  font-size: 1.2rem;
-  border: none;
-  cursor: pointer;
-  color: #666; /* 通常時の色 */
-  transition: color 0.3s ease;
-  border-radius: 5px; /* 丸いボタンに */
-}
-
-.repeat-btn:hover {
-  color: #333; /* ホバー時の色 */
-}
-
-.repeat-btn.active {
-  color: #1DB954; /* アクティブ時（繰り返しオン）の色 */
-  background-color: rgba(29, 185, 84, 0.1); /* アクティブ時の背景色 */
-}
-
-.player {
-  transition: 0.1s ease;
-}
-
-.player .album-art{
-  max-width: 90%;
-  height: auto;
-  margin: 0 auto;
-}
-
-/* 圧縮表示用スタイル */
-.player.compressed {
-  display: flex;
-  justify-content: start;
-  align-items: center;
-  margin: 0 200px 10px 200px;
-  padding: 10px;
-  border-radius: 10px;
-}
-
-.player.compressed .album-art {
-  max-width: 50px;
-  max-height: 50px;
-}
-
-.player.compressed .track-info {
-  margin: 10px 10px 4px 10px;
-  padding: 0;
-  width: 80%;
-  font-size: 0.8rem;
-  text-align: left;
-}
-
-.player.compressed .track-title{
-  margin: 0 10px 0 10px;
-  padding: 0;
-}
-
-.player.compressed .controls {
-  gap: 10px;
-}
-
-.player.compressed #compress-bar,
-.player.compressed .artist-name,
-.player.compressed .track-date,
-.player.compressed .back-btn,
-.player.compressed .progress-container,
-.player.compressed .volume-container,
-.player.compressed .information-container,
-.player.compressed .compress-bar {
-  display: none; /* 圧縮時に再度非表示にしておく */
-}
-
+/* 年別アコーディオン */
 #album-list {
-  width: 100%;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.album div {
+.album {
+  background: var(--card-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
+}
+
+.album-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+  background: #fafafa;
+  transition: background 0.2s;
 }
 
-.album-header img{
-  max-width: 50px;
-  max-height: 50px;
-  border-radius: 10px;
+.album-header:hover {
+  background: #f4f4f5;
 }
 
-.album-header span{
-  margin: 0 1rem 0 1rem;
+.album-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
+.year-label {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.count-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  background: #e2e8f0;
+  border-radius: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--text-muted);
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* トラックリスト */
 .track-list {
-  width: 80%;
-  display: none;
-  list-style-type: none;
-  padding: 0;
-  margin: 0 auto;
+  list-style: none;
+  border-top: 1px solid var(--border);
 }
 
 .track-list li {
-  padding: 10px 15px;
-  border-bottom: 1px solid #ddd;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.track-list li:hover {
-  background-color: #f0f0f0;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .track-list li:last-child {
   border-bottom: none;
 }
 
-.track-list li span {
-  color: #777;
-  font-size: 14px;
+.track-list li:hover {
+  background-color: #f8fafc;
 }
 
-.toggle-btn {
+.track-list li.active {
+  background-color: #eef2ff;
+  border-left: 4px solid var(--primary);
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.track-name {
+  font-size: 0.95rem;
+}
+
+.track-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+
+.empty-msg {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+}
+
+/* 固定下部プレイヤー */
+.player {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: var(--player-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px 20px 0 0;
+  padding: 12px 20px 20px 20px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-bottom: none;
+  z-index: 100;
+  text-align: center;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#compress-bar {
+  width: 40px;
+  height: 4px;
+  background: #cbd5e1;
+  border: none;
+  border-radius: 2px;
+  margin: 0 auto 10px auto;
+  display: block;
+  cursor: pointer;
+}
+
+.album-art {
+  display: flex;
+  justify-content: center;
+}
+
+.album-art img {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.track-info {
+  margin: 10px 0 6px 0;
+}
+
+.track-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artist-name,
+.track-date {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.lufs-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #4338ca;
+  background: #e0e7ff;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-top: 6px;
+  letter-spacing: 0.02em;
+}
+
+/* プログレスバー */
+.progress-container {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 10px;
+}
+
+.current-time,
+.duration {
+  width: 36px;
+  text-align: center;
+}
+
+.progress-bar,
+.volume-bar {
+  flex: 1;
+  height: 5px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  margin: 0 8px;
+}
+
+/* コントロールボタン */
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  margin: 12px 0 8px 0;
+}
+
+.controls button {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
+  color: var(--text);
   cursor: pointer;
+  transition: transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.controls button:active {
+  transform: scale(0.92);
+}
+
+.controls .play-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+}
+
+.volume-container {
+  display: flex;
+  align-items: center;
+  width: 75%;
+  margin: 4px auto 8px auto;
+  font-size: 0.85rem;
+}
+
+.information-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.information-container button {
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.information-container button:hover {
+  background: #e2e8f0;
+}
+
+.repeat-btn.active {
+  background: #eef2ff !important;
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+
+/* プレイヤー圧縮（ミニ）表示 */
+.player.compressed {
+  padding: 8px 16px 12px 16px;
+}
+
+.player.compressed .album-art,
+.player.compressed .artist-name,
+.player.compressed .track-date,
+.player.compressed .progress-container,
+.player.compressed .volume-container,
+.player.compressed .information-container {
+  display: none;
+}
+
+.player.compressed .track-info {
+  margin: 4px 0 8px 0;
 }

@@ -1,406 +1,461 @@
-// app.js
-window.onload = function() {
-  const trackListItems = document.querySelectorAll('.track-list li');
-  trackListItems.forEach((item, index) => {
-      item.setAttribute('track-Index', index);
-  });
-};
-
-function compressPlayer() {
-  const player = document.getElementsByClassName("player")[0]; // 最初の要素にアクセス
-  player.classList.add("compressed");
-  sessionStorage.setItem('isPlayerCompressed', 'true'); // 状態を保存
-}  
-
-function expandPlayer() {
-  const player = document.getElementsByClassName("player")[0]; // 最初の要素にアクセス
-  player.classList.remove("compressed");
-  sessionStorage.setItem('isPlayerCompressed', 'false'); // 状態を保存
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const player = document.querySelector(".player");
-  const albumList = document.getElementById("album-list"); // album-listの取得
-  let touchStartY = 0;
-  let touchEndY = 0;
-  let isSwiped = false;
-  let threshold = 10; // しきい値 (ピクセル単位)
-
-  // album-listをクリックした時にcompressPlayerを呼び出す
-  //albumList.addEventListener("click", () => {
-  //  compressPlayer();
-  //});
-
-  player.addEventListener("touchstart", (e) => {
-    touchStartY = e.touches[0].clientY;
-  });
-
-  player.addEventListener("touchend", () => {
-    touchEndY = event.changedTouches[0].clientY;
-
-    // スワイプの距離がしきい値を超えている場合に動作を実行
-    if (Math.abs(touchStartY - touchEndY) > threshold) {
-      if (touchStartY < touchEndY) {
-        // 下にスワイプした場合
-        compressPlayer();
-        isSwiped = true;
-      } else if (touchStartY > touchEndY) {
-        // 上にスワイプした場合
-        expandPlayer();
-        isSwiped = true;
-      }
-    }
-  });
-
-  // 初期状態を読み込む
-  const isPlayerCompressed = sessionStorage.getItem('isPlayerCompressed');
-  if (isPlayerCompressed === 'true') {
-    compressPlayer();
-  } else {
-    expandPlayer();
-  }
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  const trackTitle = document.querySelector(".track-title");
-  const trackInfo = document.querySelector(".track-info");
-
-  function checkOverflow() {
-    if (trackTitle.scrollWidth > trackInfo.clientWidth) {
-      trackTitle.classList.add("scroll-animation"); // アニメーションを追加
-    } else {
-      trackTitle.classList.remove("scroll-animation"); // アニメーションを削除
-    }
-  }
-
-  // 初期読み込みとリサイズ時にチェック
-  checkOverflow();
-  window.addEventListener("resize", checkOverflow);
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  const albums = document.querySelectorAll(".album");
-  const trackTitleElement = document.querySelector(".track-title");
-  const artistNameElement = document.querySelector(".artist-name");
-  const trackDateElement = document.querySelector(".track-date");
-  const playBtn = document.querySelector(".play-btn");
-  const backBtn = document.querySelector(".back-btn"); // 戻るボタン
-  const skipBtn = document.querySelector(".skip-btn"); // スキップボタン
-  const progressBar = document.querySelector(".progress-bar");
-  const currentTimeEl = document.querySelector(".current-time");
-  const durationEl = document.querySelector(".duration");
-  const downloadBtn = document.querySelector(".download-btn");
-  const repeatBtn = document.querySelector(".repeat-btn"); // 繰り返しボタン
-  const audio = new Audio(); // 音楽再生用のAudioオブジェクト
+// app.js - ボツ音源プレイヤー（完全自動取得 ＆ -14 LUFS ラウドネスノーマライゼーション）
+(() => {
+  let tracks = [];
+  let currentIndex = 0;
   let isPlaying = false;
-  let currentTrackURL = ""; // 現在再生中のトラックのURLを保存する変数
-  let currentTrackIndex = 0; // 現在再生中のトラックのインデックスを管理
-  const trackListItems = document.querySelectorAll("#album-list .track-list li"); // トラックのリスト
-  let isRepeating = false; // 繰り返し状態を管理するフラグ
+  let isRepeating = false;
+  const audio = new Audio();
 
-  // 繰り返しボタンのトグル
-  repeatBtn.addEventListener("click", () => {
-    isRepeating = !isRepeating; // 繰り返し状態を切り替え
-    repeatBtn.classList.toggle("active", isRepeating); // ボタンの状態を視覚的に変更
-    sessionStorage.setItem('isRepeating', isRepeating); // 繰り返し状態を保存
-  });
+  // Web Audio API（-14 LUFS ノーマライズ用）
+  const TARGET_LUFS = -14.0;
+  let audioCtx = null;
+  let lufsGainNode = null;
+  let volumeGainNode = null;
+  let limiterNode = null;
+  let isAudioGraphReady = false;
 
-  // セッションストレージから状態を読み込む
-  const savedIsRepeating = sessionStorage.getItem('isRepeating');
-  if (savedIsRepeating === 'true') {
-    isRepeating = true;
-    repeatBtn.classList.add("active");
-  } else {
-    isRepeating = false;
-    repeatBtn.classList.remove("active");
+  // DOM要素
+  const $ = (sel) => document.querySelector(sel);
+  const player = $("#player");
+  const trackTitle = $("#trackTitle");
+  const artistName = $("#artistName");
+  const trackDate = $("#trackDate");
+  const lufsBadge = $("#lufsBadge");
+  const playBtn = $("#playBtn");
+  const backBtn = $("#backBtn");
+  const skipBtn = $("#skipBtn");
+  const repeatBtn = $("#repeatBtn");
+  const progressBar = $("#progressBar");
+  const currentTimeEl = $("#currentTime");
+  const durationEl = $("#duration");
+  const volumeBar = $("#volumeBar");
+  const albumList = $("#album-list");
+  const stats = $("#stats");
+
+  // Web Audio APIの初期化（ユーザー操作時にアンロック）
+  function initAudioGraph() {
+    if (isAudioGraphReady) return;
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContextClass();
+
+      const sourceNode = audioCtx.createMediaElementSource(audio);
+      lufsGainNode = audioCtx.createGain();
+      volumeGainNode = audioCtx.createGain();
+      volumeGainNode.gain.value = volumeBar.value / 100;
+
+      // 音割れ（0dBFSクリップ）防止用リミッター
+      limiterNode = audioCtx.createDynamicsCompressor();
+      limiterNode.threshold.value = -0.5;
+      limiterNode.knee.value = 0;
+      limiterNode.ratio.value = 20;
+      limiterNode.attack.value = 0.003;
+      limiterNode.release.value = 0.1;
+
+      // source -> lufsGain -> volumeGain -> limiter -> destination
+      sourceNode.connect(lufsGainNode);
+      lufsGainNode.connect(volumeGainNode);
+      volumeGainNode.connect(limiterNode);
+      limiterNode.connect(audioCtx.destination);
+
+      isAudioGraphReady = true;
+    } catch (_) {}
   }
 
-  function showTrack(track) {
-    // トラック情報を更新する関数
-    const trackTitle = track.getAttribute("track-title");
-    const artistName = track.getAttribute("artist-name");
-    const trackDate = track.getAttribute("track-date");
-    const albumArt = track.getAttribute("album-art");
-    currentTrackURL = track.getAttribute("trackURL"); // トラックURLを取得
-
-    if (albumArt) {
-      document.querySelector(".album-art img").src = albumArt;
+  function resumeAudioContext() {
+    initAudioGraph();
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume();
     }
-    trackTitleElement.textContent = trackTitle;
-    artistNameElement.textContent = artistName;
-    trackDateElement.textContent = trackDate;
+  }
 
-    audio.src = currentTrackURL;
+  // ITU-R BS.1770 K-weighting によるラウドネス（LUFS）測定
+  async function measureLUFS(fileUrl) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    const tempCtx = new AudioContextClass();
+
+    try {
+      const res = await fetch(fileUrl);
+      const arrayBuffer = await res.arrayBuffer();
+      const audioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+
+      // K-weightingフィルタ用オフラインコンテキスト
+      const offline = new OfflineAudioContext(
+        audioBuffer.numberOfChannels,
+        audioBuffer.length,
+        audioBuffer.sampleRate
+      );
+
+      const src = offline.createBufferSource();
+      src.buffer = audioBuffer;
+
+      // Stage 1: High shelf filter (1681.97 Hz, +3.999 dB)
+      const shelf = offline.createBiquadFilter();
+      shelf.type = "highshelf";
+      shelf.frequency.value = 1681.97;
+      shelf.gain.value = 3.999;
+
+      // Stage 2: High pass filter (38.13 Hz, Q: 0.5)
+      const hpf = offline.createBiquadFilter();
+      hpf.type = "highpass";
+      hpf.frequency.value = 38.13;
+      hpf.Q.value = 0.5;
+
+      src.connect(shelf);
+      shelf.connect(hpf);
+      hpf.connect(offline.destination);
+      src.start(0);
+
+      const filtered = await offline.startRendering();
+
+      // 各チャンネルの平均二乗パワーを算出
+      let totalPower = 0;
+      const step = 4; // 高速サンプリング（高精度・低負荷）
+      for (let c = 0; c < filtered.numberOfChannels; c++) {
+        const data = filtered.getChannelData(c);
+        let sum = 0;
+        for (let i = 0; i < data.length; i += step) {
+          sum += data[i] * data[i];
+        }
+        totalPower += sum / (data.length / step);
+      }
+
+      tempCtx.close();
+      if (totalPower <= 0) return -70;
+      return -0.691 + 10 * Math.log10(totalPower);
+    } catch (_) {
+      tempCtx.close();
+      return -18.0; // フォールバック想定値
+    }
+  }
+
+  // -14 LUFSに合わせたゲインの適用
+  async function applyLufsNormalization(track) {
+    if (!lufsBadge) return;
+    lufsBadge.textContent = "音量解析中...";
+
+    const cacheKey = `lufs_${track.file}`;
+    let lufs = null;
+
+    // キャッシュ確認
+    const cached = localStorage.getItem(cacheKey);
+    if (cached !== null) {
+      lufs = parseFloat(cached);
+    } else {
+      lufs = await measureLUFS(track.file);
+      if (!isNaN(lufs)) {
+        localStorage.setItem(cacheKey, lufs.toFixed(2));
+      }
+    }
+
+    if (isNaN(lufs) || lufs < -60) lufs = -18.0;
+
+    // ターゲット -14 LUFS との差分ゲイン
+    const diffDb = TARGET_LUFS - lufs;
+    const targetLinearGain = Math.pow(10, diffDb / 20);
+
+    if (lufsGainNode && audioCtx) {
+      lufsGainNode.gain.setTargetAtTime(targetLinearGain, audioCtx.currentTime, 0.05);
+    }
+
+    const sign = diffDb >= 0 ? "+" : "";
+    lufsBadge.textContent = `-14 LUFS (${sign}${diffDb.toFixed(1)}dB)`;
+  }
+
+  // 自然順ソート（年・月・日・枝番の降順＝新しいものが上）
+  const parseSortKey = (name) => {
+    const m = name.match(/^(\d{4})_(\d{2})(\d{2})-(\d+)/);
+    return m ? [parseInt(m[1]), parseInt(m[2]), parseInt(m[3]), parseInt(m[4])] : [0, 0, 0, 0];
+  };
+
+  const sortTracks = (list) => {
+    return list.slice().sort((a, b) => {
+      const ka = parseSortKey(a.file || a.title);
+      const kb = parseSortKey(b.file || b.title);
+      for (let i = 0; i < 4; i++) {
+        if (ka[i] !== kb[i]) return kb[i] - ka[i];
+      }
+      return 0;
+    });
+  };
+
+  const parseTrack = (filename) => {
+    const match = filename.match(/^(\d{4})_(\d{2})(\d{2})-(\d+)\.mp3$/);
+    return {
+      file: filename,
+      title: filename.replace(/\.mp3$/, ""),
+      year: match ? parseInt(match[1]) : 0,
+      date: match ? `${match[1]}.${match[2]}.${match[3]}` : ""
+    };
+  };
+
+  // トラックデータの自動取得（GitHub API / ローカルAPI / ディレクトリ探索）
+  async function loadTracks() {
+    try {
+      const res = await fetch("/api/tracks", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return sortTracks(data);
+      }
+    } catch (_) {}
+
+    if (location.hostname.endsWith("github.io")) {
+      const owner = location.hostname.split(".")[0];
+      const repo = location.pathname.split("/").filter(Boolean)[0];
+      const cacheKey = `tracks_cache_${owner}_${repo}`;
+
+      try {
+        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/HEAD`);
+        if (res.ok) {
+          const data = await res.json();
+          const mp3s = (data.tree || [])
+            .map((item) => item.path)
+            .filter((p) => p && p.endsWith(".mp3") && !p.includes("/"))
+            .map(parseTrack);
+
+          if (mp3s.length > 0) {
+            const sorted = sortTracks(mp3s);
+            localStorage.setItem(cacheKey, JSON.stringify(sorted));
+            return sorted;
+          }
+        }
+      } catch (_) {}
+
+      try {
+        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/`);
+        if (res.ok) {
+          const files = await res.json();
+          const mp3s = files
+            .filter((f) => f.name && f.name.endsWith(".mp3"))
+            .map((f) => parseTrack(f.name));
+
+          if (mp3s.length > 0) {
+            const sorted = sortTracks(mp3s);
+            localStorage.setItem(cacheKey, JSON.stringify(sorted));
+            return sorted;
+          }
+        }
+      } catch (_) {}
+
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch (_) {}
+      }
+    }
+
+    try {
+      const res = await fetch("./");
+      const html = await res.text();
+      const regex = /href=["']([^"']+\.mp3)["']/gi;
+      const found = [];
+      let m;
+      while ((m = regex.exec(html)) !== null) {
+        const file = decodeURIComponent(m[1]).split("/").pop();
+        if (file.endsWith(".mp3") && !found.some((t) => t.file === file)) {
+          found.push(parseTrack(file));
+        }
+      }
+      if (found.length > 0) return sortTracks(found);
+    } catch (_) {}
+
+    return [];
+  }
+
+  const formatTime = (sec) => {
+    if (isNaN(sec) || sec < 0) return "0:00";
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  const setCompressed = (comp) => {
+    player.classList.toggle("compressed", comp);
+    sessionStorage.setItem("isPlayerCompressed", comp ? "true" : "false");
+  };
+
+  function setTrack(index, autoPlay = false) {
+    if (index < 0 || index >= tracks.length) return;
+    currentIndex = index;
+    const t = tracks[index];
+
+    trackTitle.textContent = t.title;
+    artistName.textContent = `ボツ音源 (${t.year || ""}年)`;
+    trackDate.textContent = t.date || "";
+
+    audio.src = encodeURI(t.file);
     progressBar.value = 0;
     currentTimeEl.textContent = "0:00";
+    durationEl.textContent = "0:00";
+
+    // -14 LUFSに自動調整
+    applyLufsNormalization(t);
+
+    document.querySelectorAll(".track-list li").forEach((li) => {
+      const idx = parseInt(li.getAttribute("data-index"), 10);
+      li.classList.toggle("active", idx === index);
+    });
+
+    if (autoPlay) {
+      resumeAudioContext();
+      audio.play().then(() => {
+        isPlaying = true;
+        playBtn.textContent = "⏸";
+      }).catch(() => {});
+    }
   }
 
-  // 初期表示音楽設定
-  const firstTrack = trackListItems[0]; // 最初のトラックを選択（必要に応じて変更）
-  if (firstTrack) {
-    showTrack(firstTrack); // 最初のトラックをロード
-  }
+  function renderList() {
+    albumList.innerHTML = "";
+    if (tracks.length === 0) {
+      albumList.innerHTML = `<div class="empty-msg">mp3を読み込み中、または見つかりませんでした</div>`;
+      stats.textContent = "0曲";
+      return;
+    }
 
-  // ページリロード後に選択したトラックを再生
-  //const savedTrackURL = sessionStorage.getItem("currentTrackURL");
-  //const savedTrackIndex = sessionStorage.getItem("currentTrackIndex");
+    stats.textContent = `全 ${tracks.length} 曲（最新順）`;
 
-  //if (savedTrackURL && savedTrackIndex !== null) {
-  //  currentTrackURL = savedTrackURL;
-  //  currentTrackIndex = savedTrackIndex;
-  //  const savedTrack = trackListItems[currentTrackIndex];
-  //  loadTrack(savedTrack);
-  //}
+    const groups = {};
+    tracks.forEach((t, index) => {
+      const y = t.year || "その他";
+      if (!groups[y]) groups[y] = [];
+      groups[y].push({ ...t, globalIndex: index });
+    });
 
-  // DOM要素を取得
-  const trackInformation = document.querySelector('.track-information');
-  const infoToggleBtn = document.querySelector('.info-toggle-btn');
-  const infoCloseBtn = document.querySelector('.info-close-btn');
+    const years = Object.keys(groups).sort((a, b) => b - a);
 
-  // トグルボタンをクリックしたときの処理
-  infoToggleBtn.addEventListener('click', () => {
-    trackInformation.style.display = 'block';
-  });
+    years.forEach((year, yIdx) => {
+      const yearTracks = groups[year];
+      const album = document.createElement("div");
+      album.className = "album";
 
-  // バツボタンをクリックしたときの処理
-  infoCloseBtn.addEventListener('click', () => {
-    trackInformation.style.display = 'none';
-  });
+      const isOpen = yIdx === 0;
+      album.innerHTML = `
+        <div class="album-header">
+          <div class="album-title">
+            <span class="year-label">${year}年</span>
+            <span class="count-badge">${yearTracks.length}曲</span>
+          </div>
+          <button class="toggle-btn" aria-label="開閉">${isOpen ? "−" : "＋"}</button>
+        </div>
+        <ul class="track-list" style="display: ${isOpen ? "block" : "none"}">
+          ${yearTracks.map((t) => `
+            <li data-index="${t.globalIndex}" class="${t.globalIndex === currentIndex ? "active" : ""}">
+              <span class="track-name">${t.title}</span>
+              <span class="track-meta">${t.date}</span>
+            </li>
+          `).join("")}
+        </ul>
+      `;
 
-  albums.forEach(album => {
-    const toggleBtn = album.querySelector(".toggle-btn");
-    const trackList = album.querySelector(".track-list");
+      const header = album.querySelector(".album-header");
+      const list = album.querySelector(".track-list");
+      const toggle = album.querySelector(".toggle-btn");
 
-    album.addEventListener("click", () => {
-      albums.forEach(otherAlbum => {
-        if (otherAlbum !== album) {
-          otherAlbum.querySelector(".track-list").style.display = "none";
-          otherAlbum.querySelector(".toggle-btn").textContent = "+";
-        }
+      header.addEventListener("click", () => {
+        const open = list.style.display !== "none";
+        list.style.display = open ? "none" : "block";
+        toggle.textContent = open ? "＋" : "−";
       });
 
-      if (trackList.style.display === "none" || trackList.style.display === "") {
-        trackList.style.display = "block";
-        toggleBtn.textContent = "-";
+      list.querySelectorAll("li").forEach((li) => {
+        li.addEventListener("click", () => {
+          resumeAudioContext();
+          const idx = parseInt(li.getAttribute("data-index"), 10);
+          setTrack(idx, true);
+        });
+      });
+
+      albumList.appendChild(album);
+    });
+  }
+
+  function initEvents() {
+    playBtn.addEventListener("click", () => {
+      resumeAudioContext();
+      if (isPlaying) {
+        audio.pause();
+        playBtn.textContent = "▶";
       } else {
-        trackList.style.display = "none";
-        toggleBtn.textContent = "+";
+        audio.play();
+        playBtn.textContent = "⏸";
+      }
+      isPlaying = !isPlaying;
+    });
+
+    audio.addEventListener("timeupdate", () => {
+      if (!audio.duration) return;
+      progressBar.value = (audio.currentTime / audio.duration) * 100;
+      currentTimeEl.textContent = formatTime(audio.currentTime);
+      durationEl.textContent = formatTime(audio.duration);
+    });
+
+    audio.addEventListener("loadedmetadata", () => {
+      durationEl.textContent = formatTime(audio.duration);
+    });
+
+    progressBar.addEventListener("input", () => {
+      if (audio.duration) {
+        audio.currentTime = (progressBar.value / 100) * audio.duration;
       }
     });
 
-    const tracks = trackList.querySelectorAll("li");
-    tracks.forEach(track => {
-      track.addEventListener("click", function() {
-        const albumArt = this.getAttribute("album-art");
-        const trackTitle = this.getAttribute("track-title");
-        const artistName = this.getAttribute("artist-name");
-        const trackDate = this.getAttribute("track-date");
-        currentTrackURL = this.getAttribute("trackURL"); // トラックURLを取得
-        currentTrackIndex = this.getAttribute("track-Index");
+    // 音量操作
+    volumeBar.addEventListener("input", (e) => {
+      const vol = e.target.value / 100;
+      if (volumeGainNode && audioCtx) {
+        volumeGainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
+      }
+      audio.volume = vol;
+    });
 
-        if (albumArt) {
-          document.querySelector(".album-art img").src = albumArt;
-        }
-        trackTitleElement.textContent = trackTitle;
-        artistNameElement.textContent = artistName;
-        trackDateElement.textContent = trackDate;
+    skipBtn.addEventListener("click", () => {
+      resumeAudioContext();
+      setTrack(currentIndex < tracks.length - 1 ? currentIndex + 1 : 0, true);
+    });
 
-        audio.src = currentTrackURL;
-        audio.load();
+    backBtn.addEventListener("click", () => {
+      resumeAudioContext();
+      if (audio.currentTime > 3 || currentIndex === 0) {
+        audio.currentTime = 0;
+      } else {
+        setTrack(currentIndex - 1, true);
+      }
+    });
+
+    audio.addEventListener("ended", () => {
+      if (isRepeating) {
+        audio.currentTime = 0;
         audio.play();
-        isPlaying = true;
-        playBtn.textContent = "⏸️";
-
-        // トラックのインデックスとURLをSessionStorageに保存
-        sessionStorage.setItem('currentTrackURL', currentTrackURL);
-        sessionStorage.setItem('currentTrackIndex', Array.from(trackListItems).indexOf(this));
-
-        progressBar.value = 0;
-        currentTimeEl.textContent = "0:00";
-
-        // プレイヤーを拡張表示にする
-        expandPlayer();
-      });
+      } else {
+        skipBtn.click();
+      }
     });
-  });
 
-  playBtn.addEventListener("click", () => {
-    if (isPlaying) {
-      audio.pause();
-      playBtn.textContent = "▶️";
-    } else {
-      audio.play();
-      playBtn.textContent = "⏸️";
-    }
-    isPlaying = !isPlaying;
-  });
-
-  audio.addEventListener("timeupdate", () => {
-    const progress = (audio.currentTime / audio.duration) * 100;
-    progressBar.value = progress;
-    currentTimeEl.textContent = formatTime(audio.currentTime);
-    durationEl.textContent = `-${formatTime(audio.duration - audio.currentTime)}`;
-  });
-
-  progressBar.addEventListener("input", () => {
-    audio.currentTime = (progressBar.value / 100) * audio.duration;
-  });
-
-  function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
-    return `${minutes}:${secs}`;
-  }
-
-  audio.addEventListener("loadedmetadata", () => {
-    durationEl.textContent = `-${formatTime(audio.duration)}`;
-  });
-
-  // ダウンロードボタンの動作
-  downloadBtn.addEventListener("click", () => {
-    if (currentTrackURL) {
-      const a = document.createElement("a");
-      a.href = currentTrackURL;
-      a.download = currentTrackURL.split("/").pop(); // ファイル名を設定
-      a.click();
-    } else {
-      alert("ダウンロードするトラックが選択されていません。");
-    }
-  });
-
-  document.querySelector(".repeat-btn").addEventListener("click", function() {
-    if (this.classList.contains("active")) {
-      this.classList.add("active");
-      this.textContent = "🔂"; // 次へアイコンに変更
-    } else {
-      this.classList.remove("active");
-      this.textContent = "🔄"; // 繰り返しアイコンに変更
-    }
-  });
-
-  // 戻るボタン（前のトラックに戻る）
-  backBtn.addEventListener("click", () => {
-    if (currentTrackIndex > 0) {
-      currentTrackIndex--; // トラックインデックスを1つ戻す
-      loadTrack(trackListItems[currentTrackIndex]); // 前のトラックをロード
-    } else {
-      // 最初のトラックにいる場合は再生位置を0に戻す
-      loadTrack(trackListItems[currentTrackIndex]);
-    }
-  });
-
-  // スキップボタン（次のトラックに進む）
-  skipBtn.addEventListener("click", () => {
-    if (currentTrackIndex < trackListItems.length - 1) {
-      currentTrackIndex++; // トラックインデックスを1つ進める
-      loadTrack(trackListItems[currentTrackIndex]); // 次のトラックをロード
-    } else {
-      // 最後のトラックにいる場合は再生を終了する
-      audio.currentTime = audio.duration;
-      audio.pause(); // 再生停止
-    }
-  });
-  
-  // 音楽終了時の処理
-  audio.addEventListener("ended", () => {
-    if (isRepeating) {
-      audio.currentTime = 0; // トラックの再生位置を0にリセット
-      audio.play(); // 再生し直す
-    } else {
-      // 次の曲に進む
-      skipBtn.click();
-    }
-  });
-
-  function loadTrack(track) {
-    // トラック情報を更新する関数
-    const trackTitle = track.getAttribute("track-title");
-    const artistName = track.getAttribute("artist-name");
-    const trackDate = track.getAttribute("track-date");
-    const albumArt = track.getAttribute("album-art");
-    currentTrackURL = track.getAttribute("trackURL"); // トラックURLを取得
-
-    if (albumArt) {
-      document.querySelector(".album-art img").src = albumArt;
-    }
-    trackTitleElement.textContent = trackTitle;
-    artistNameElement.textContent = artistName;
-    trackDateElement.textContent = trackDate;
-
-    audio.src = currentTrackURL;
-    audio.load();
-    audio.play();
-    isPlaying = true;
-    playBtn.textContent = "⏸️";
-    progressBar.value = 0;
-    currentTimeEl.textContent = "0:00";
-  }
-});
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  const creditBtn = document.querySelector(".credit-btn"); // credit-btnの要素を取得
-  const trackInfoList = document.querySelector(".track-info-list");
-  const trackInformation = document.querySelector(".track-information");
-
-  // 曲情報を追加する関数
-  function addTrackInfo(jobTitle, name) {
-    // 名前が定義されていない場合は追加しない
-    if (!name || name === "未定") return;
-
-    const li = document.createElement("li");
-    li.classList.add("info-item");
-
-    const strong = document.createElement("strong");
-    strong.classList.add("job-title");
-    strong.textContent = jobTitle;
-
-    const br = document.createElement("br");  // 改行タグを作成
-
-    const span = document.createElement("span");
-    span.classList.add("name");
-    span.textContent = name;
-
-    li.appendChild(strong);
-    li.appendChild(br);  // 改行を追加
-    li.appendChild(span);
-
-    trackInfoList.appendChild(li);
-  }
-
-  // track-list内のトラックがクリックされたときの処理
-  const trackListItems = document.querySelectorAll("#album-list .track-list li");
-
-  trackListItems.forEach(item => {
-    item.addEventListener("click", () => {
-      // trackInfoListをクリア
-      trackInfoList.innerHTML = '';
-
-      // クリックされたトラックの情報を取得
-      const artistName = item.getAttribute("artist-name");
-      const trackTitle = item.getAttribute("track-title");
-      const trackDate = item.getAttribute("track-date");
-      const composerName = item.getAttribute("composer-name");
-      const lyricistName = item.getAttribute("lyricist-name");
-      const singerName = item.getAttribute("singer-name");
-
-      // 定義されている情報をリストに追加
-      if (artistName) addTrackInfo("アーティスト名", artistName);
-      if (trackTitle) addTrackInfo("曲名", trackTitle);
-      if (trackDate) addTrackInfo("リリース日", trackDate);
-      if (composerName) addTrackInfo("作曲者", composerName);
-      if (lyricistName) addTrackInfo("作詞者", lyricistName);
-      if (singerName) addTrackInfo("歌手名", singerName);
-
+    repeatBtn.addEventListener("click", () => {
+      isRepeating = !isRepeating;
+      repeatBtn.classList.toggle("active", isRepeating);
+      repeatBtn.textContent = isRepeating ? "🔂" : "🔁";
     });
-  });
 
-  // credit-btnをクリックしたときに曲情報を表示
-  creditBtn.addEventListener("click", () => {
-    if (trackInformation.style.display === "none" || trackInformation.style.display === "") {
-      trackInformation.style.display = "block";
-    } else {
-      trackInformation.style.display = "none";
+    $("#compress-bar").addEventListener("click", () => {
+      setCompressed(!player.classList.contains("compressed"));
+    });
+
+    if (sessionStorage.getItem("isPlayerCompressed") === "true") {
+      setCompressed(true);
     }
-  });
-});
+  }
+
+  async function init() {
+    initEvents();
+    tracks = await loadTracks();
+    renderList();
+    if (tracks.length > 0) {
+      setTrack(0, false);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();

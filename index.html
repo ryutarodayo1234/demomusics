@@ -3,186 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>りゅうこの音楽</title>
+  <title>ボツ音源アーカイブ</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="track-information">
-    <button class="info-close-btn">❌</button>
-    <button class="info-toggle-btn">曲情報</button>
-    <ul class="track-info-list">
-      <li class="info-item">
-      <!-- 追加されるリストアイテムはここに挿入 -->
-    </ul>
-  </div>
+  <!-- ヘッダー -->
+  <header class="page-header">
+    <h1>ボツ音源アーカイブ</h1>
+    <div class="stats" id="stats">読み込み中...</div>
+  </header>
 
-  <div class="player">
-    <button onclick="compressPlayer()" id="compress-bar"></button> <!-- ボタンにテキストを追加 -->
+  <!-- 曲リストコンテナ（JavaScriptで自動取得・描画） -->
+  <main id="album-list"></main>
+
+  <!-- 音楽プレイヤー -->
+  <div class="player" id="player">
+    <button id="compress-bar" title="プレイヤー切り替え"></button>
 
     <div class="album-art">
-      <img onclick="expandPlayer()" src="images/default.jpg" alt="アルバムアート">
+      <img src="default.jpg" alt="ジャケット写真" id="playerArt">
     </div>
-  
+
     <div class="track-info">
-      <div class="track-title" id="trackTitle" onclick="expandPlayer()">ここに曲名が入りますここに曲名が入りますここに曲名が入ります</div>
-      <div class="artist-name">アーティスト名</div>
-      <div class="track-date">2024.13.23</div>
+      <div class="track-title" id="trackTitle">曲を選択してください</div>
+      <div class="artist-name" id="artistName">未発表デモ</div>
+      <div class="track-date" id="trackDate">----.--.--</div>
+      <div class="lufs-badge" id="lufsBadge">Target: -14 LUFS</div>
     </div>
-  
+
     <div class="progress-container">
-      <span class="current-time">0:00</span>
-      <input type="range" class="progress-bar" min="0" max="100" value="50">
-      <span class="duration">-0:14</span>
+      <span class="current-time" id="currentTime">0:00</span>
+      <input type="range" class="progress-bar" id="progressBar" min="0" max="100" value="0">
+      <span class="duration" id="duration">0:00</span>
     </div>
-  
+
     <div class="controls">
-      <button class="back-btn">⏪</button>
-      <button class="play-btn">▶️</button>
-      <button class="skip-btn">⏩</button>
+      <button class="back-btn" id="backBtn" title="前の曲">⏮</button>
+      <button class="play-btn" id="playBtn" title="再生/一時停止">▶</button>
+      <button class="skip-btn" id="skipBtn" title="次の曲">⏭</button>
     </div>
-  
+
     <div class="volume-container">
       <span class="volume-icon">🔈</span>
-      <input type="range" class="volume-bar" min="0" max="100" value="30">
+      <input type="range" class="volume-bar" id="volumeBar" min="0" max="100" value="70">
       <span class="volume-icon">🔊</span>
     </div>
 
     <div class="information-container">
-      <button class="credit-btn">ℹ️</button>
-      <button class="download-btn">⬇️</button>
-      <button class="repeat-btn">🔄</button>
+      <button class="repeat-btn" id="repeatBtn" title="リピート切替">🔁</button>
     </div>
   </div>
-
-  <div id="album-list">  
-    <div class="album" album-name="ボーカルテーマ1 第9回キネティックノベル大賞">
-      <div class="album-header">
-        <div>
-          <img src="images/default.jpg" />
-          <span>第9回キネティックノベル大賞<br />ボーカルテーマ1</span>
-        </div>
-        <button class="toggle-btn">+</button>
-      </div>
-      <ul class="track-list">
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ1 0621 第9回キネティックノベル大賞" track-date="2023.06.21" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal1/demo/2023_0621.mp3">ボーカルテーマ1 0621</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ1 0624 第9回キネティックノベル大賞" track-date="2023.06.24" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal1/demo/2023_0624.mp3">ボーカルテーマ1 0624</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ1 0625 第9回キネティックノベル大賞" track-date="2023.06.25" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal1/demo/2023_0625.mp3">ボーカルテーマ1 0625</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ1 0626 第9回キネティックノベル大賞" track-date="2023.06.26" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal1/demo/2023_0626.mp3">ボーカルテーマ1 0626</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ1 0627 第9回キネティックノベル大賞" track-date="2023.06.27" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal1/demo/2023_0627.mp3">ボーカルテーマ1 0627</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ1 0628 第9回キネティックノベル大賞" track-date="2023.06.28" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal1/demo/2023_0628.mp3">ボーカルテーマ1 0628</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ1 0701 第9回キネティックノベル大賞" track-date="2023.07.01" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal1/demo/2023_0701.mp3">ボーカルテーマ1 0701</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ1 0708 第9回キネティックノベル大賞" track-date="2023.07.08" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal1/demo/2023_0708.mp3">ボーカルテーマ1 0708</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ1 0709 第9回キネティックノベル大賞" track-date="2023.07.09" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal1/demo/2023_0709.mp3">ボーカルテーマ1 0709</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ1 0712 第9回キネティックノベル大賞" track-date="2023.07.12" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal1/demo/2023_0712.mp3">ボーカルテーマ1 0712</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ1 0723 第9回キネティックノベル大賞" track-date="2023.07.23" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal1/demo/2023_0723.mp3">ボーカルテーマ1 0723</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ1 0803 第9回キネティックノベル大賞" track-date="2023.08.03" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal1/demo/2023_0803.mp3">ボーカルテーマ1 0803</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ1 0824 第9回キネティックノベル大賞" track-date="2023.08.24" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal1/demo/2023_0824.mp3">ボーカルテーマ1 0824</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ1 0909 第9回キネティックノベル大賞" track-date="2023.09.09" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal1/demo/2023_0909.mp3">ボーカルテーマ1 0909</li>
-      </ul>
-    </div>
-
-    <div class="album" album-name="ボーカルテーマ2 第9回キネティックノベル大賞">
-      <div class="album-header">
-        <div>
-          <img src="images/default.jpg" />
-          <span>第9回キネティックノベル大賞<br />ボーカルテーマ2</span>
-        </div>
-        <button class="toggle-btn">+</button>
-      </div>
-      <ul class="track-list" style="display: none;">
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0624 第9回キネティックノベル大賞" track-date="2023.06.24" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0624.mp3">ボーカルテーマ2 0624</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0625 第9回キネティックノベル大賞" track-date="2023.06.25" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0625.mp3">ボーカルテーマ2 0625</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0626 第9回キネティックノベル大賞" track-date="2023.06.26" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0626.mp3">ボーカルテーマ2 0626</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0709 第9回キネティックノベル大賞" track-date="2023.07.09" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0709.mp3">ボーカルテーマ2 0709</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0713 第9回キネティックノベル大賞" track-date="2023.07.13" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0713.mp3">ボーカルテーマ2 0713</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0714 第9回キネティックノベル大賞" track-date="2023.07.14" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0714.mp3">ボーカルテーマ2 0714</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0717 第9回キネティックノベル大賞" track-date="2023.07.17" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0717.mp3">ボーカルテーマ2 0717</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0718 第9回キネティックノベル大賞" track-date="2023.07.18" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0718.mp3">ボーカルテーマ2 0718</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0719 第9回キネティックノベル大賞" track-date="2023.07.19" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0719.mp3">ボーカルテーマ2 0719</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0727 第9回キネティックノベル大賞" track-date="2023.07.27" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0727.mp3">ボーカルテーマ2 0727</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0728 第9回キネティックノベル大賞" track-date="2023.07.28" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0728.mp3">ボーカルテーマ2 0728</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0803 第9回キネティックノベル大賞" track-date="2023.08.03" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0803.mp3">ボーカルテーマ2 0803</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0813 第9回キネティックノベル大賞" track-date="2023.08.13" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0813.mp3">ボーカルテーマ2 0813</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0822 第9回キネティックノベル大賞" track-date="2023.08.22" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0822.mp3">ボーカルテーマ2 0822</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0908 第9回キネティックノベル大賞" track-date="2023.09.08" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0908.mp3">ボーカルテーマ2 0908</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ2 0909 第9回キネティックノベル大賞" track-date="2023.09.09" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal2/demo/2023_0909.mp3">ボーカルテーマ2 0909</li>
-      </ul>
-    </div>
-
-    <div class="album" album-name="ボーカルテーマ3 第9回キネティックノベル大賞">
-      <div class="album-header">
-        <div>
-          <img src="images/default.jpg" />
-          <span>第9回キネティックノベル大賞<br />ボーカルテーマ3</span>
-        </div>
-        <button class="toggle-btn">+</button>
-      </div>
-      <ul class="track-list" style="display: none;">
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0627 第9回キネティックノベル大賞" track-date="2023.06.27" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0627.mp3">ボーカルテーマ3 0627</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0701 第9回キネティックノベル大賞" track-date="2023.07.01" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0701.mp3">ボーカルテーマ3 0701</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0702 第9回キネティックノベル大賞" track-date="2023.07.02" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0702.mp3">ボーカルテーマ3 0702</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0705 第9回キネティックノベル大賞" track-date="2023.07.05" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0705.mp3">ボーカルテーマ3 0705</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0706 第9回キネティックノベル大賞" track-date="2023.07.06" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0706.mp3">ボーカルテーマ3 0706</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0709 第9回キネティックノベル大賞" track-date="2023.07.09" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0709.mp3">ボーカルテーマ3 0709</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0718 第9回キネティックノベル大賞" track-date="2023.07.18" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0718.mp3">ボーカルテーマ3 0718</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0720 第9回キネティックノベル大賞" track-date="2023.07.20" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0720.mp3">ボーカルテーマ3 0720</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0722 第9回キネティックノベル大賞" track-date="2023.07.22" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0722.mp3">ボーカルテーマ3 0722</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0724 第9回キネティックノベル大賞" track-date="2023.07.24" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0724.mp3">ボーカルテーマ3 0724</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0725 第9回キネティックノベル大賞" track-date="2023.07.25" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0725.mp3">ボーカルテーマ3 0725</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0728 第9回キネティックノベル大賞" track-date="2023.07.28" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0728.mp3">ボーカルテーマ3 0728</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0803 第9回キネティックノベル大賞" track-date="2023.08.03" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0803.mp3">ボーカルテーマ3 0803</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0814 第9回キネティックノベル大賞" track-date="2023.08.14" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0814.mp3">ボーカルテーマ3 0814</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0820 第9回キネティックノベル大賞" track-date="2023.08.20" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0820.mp3">ボーカルテーマ3 0820</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0822 第9回キネティックノベル大賞" track-date="2023.08.22" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0822.mp3">ボーカルテーマ3 0822</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="ボーカルテーマ3 0909 第9回キネティックノベル大賞" track-date="2023.09.09" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_Vocal3/demo/2023_0909.mp3">ボーカルテーマ3 0909</li>
-      </ul>
-    </div>
-
-    <div class="album" album-name="BGMテーマ 第9回キネティックノベル大賞">
-      <div class="album-header">
-        <div>
-          <img src="images/default.jpg" />
-          <span>第9回キネティックノベル大賞<br />BGMテーマ</span>
-        </div>
-        <button class="toggle-btn">+</button>
-      </div>
-      <ul class="track-list">
-        <li album-art="" artist-name="アニメ音楽工房" track-title="BGMテーマ 0625 第9回キネティックノベル大賞" track-date="2023.06.25" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_KineticNovelGrandPrix_BGM1/demo/2023_0625.mp3">BGMテーマ 0625</li>
-      </ul>
-    </div>
-
-    <div class="album" album-name="第18回プロセカNEXT ミライ☆シンフォニア">
-      <div class="album-header">
-        <div>
-          <img src="images/default.jpg" />
-          <span>第18回プロセカNEXT<br />ミライ☆シンフォニア</span>
-        </div>
-        <button class="toggle-btn">+</button>
-      </div>
-      <ul class="track-list" style="display: none;">
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0501" track-date="2023.05.01" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0501.mp3">ミライ☆シンフォニア 0501</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0506" track-date="2023.05.06" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0506.mp3">ミライ☆シンフォニア 0506</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0507" track-date="2023.05.07" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0507.mp3">ミライ☆シンフォニア 0507</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0513" track-date="2023.05.13" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0513.mp3">ミライ☆シンフォニア 0513</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0522_1" track-date="2023.05.22" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0522_1.mp3">ミライ☆シンフォニア 0522_1</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0522_2" track-date="2023.05.22" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0522_2.mp3">ミライ☆シンフォニア 0522_2</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0523" track-date="2023.05.23" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0523.mp3">ミライ☆シンフォニア 0523</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0525" track-date="2023.05.25" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0525.mp3">ライ☆シンフォニア 0525</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0527" track-date="2023.05.27" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0527.mp3">ミライ☆シンフォニア 0527</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0530" track-date="2023.05.30" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0530.mp3">ミライ☆シンフォニア 0530</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0531" track-date="2023.05.31" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0531.mp3">ミライ☆シンフォニア 0531</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0601" track-date="2023.06.01" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0601.mp3">ミライ☆シンフォニア 0601</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0602" track-date="2023.06.02" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0602.mp3">ミライ☆シンフォニア 0602</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0603" track-date="2023.06.03" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0603.mp3">ミライ☆シンフォニア 0603</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0604" track-date="2023.06.04" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0604.mp3">ミライ☆シンフォニア 0604</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0605" track-date="2023.06.05" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0605.mp3">ミライ☆シンフォニア 0605</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0607" track-date="2023.06.07" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0607.mp3">ミライ☆シンフォニア 0607</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0610" track-date="2023.06.10" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0610.mp3">ミライ☆シンフォニア 0610</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0611" track-date="2023.06.11" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0611.mp3">ミライ☆シンフォニア 0611</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0613" track-date="2023.06.13" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0613.mp3">ミライ☆シンフォニア 0613</li>
-        <li album-art="" artist-name="アニメ音楽工房" track-title="第18回プロセカNEXT ミライ☆シンフォニア 0615" track-date="2023.06.15" composer-name="松本龍太郎" lyricist-name="" singer-name="" trackURL="https://github.com/ryutarodayo1234/musics/raw/refs/heads/main/2023_futureSymphonia/demo/2023_0615.mp3">ミライ☆シンフォニア 0615</li>
-      </ul>
-    </div>    
 
   <script src="app.js"></script>
 </body>
